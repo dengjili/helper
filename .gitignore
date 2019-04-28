@@ -1,0 +1,8 @@
+**/.settings/
+*.project
+**/asspath
+*.jar
+*.wararget/
+*.classpath
+*.jar
+*.war
