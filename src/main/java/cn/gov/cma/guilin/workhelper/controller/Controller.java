@@ -465,10 +465,21 @@ public class Controller {
 				}
 				
 				// 后三列为空
-				for (int i = 0; i < 3; i++) {
+				for (int i = 0; i < 2; i++) {
 					HSSFCell cell3 = row.createCell(column++);
 					setRowStyle(wb, cell3, style2);
 					cell3.setCellValue("");
+				}
+				
+				// 非人为缺测
+				if (miss == 0) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				} else {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(miss);
 				}
 				
 				// 早测列
