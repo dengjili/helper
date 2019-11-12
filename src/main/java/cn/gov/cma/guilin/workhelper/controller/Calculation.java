@@ -48,14 +48,30 @@ public class Calculation {
 		String fileName = dataAll.get(0).getFileName();
 		days = DateHelper.getDays(fileName);
 	}
-
+	
 	// 1.统计每月天数是否正常，如果缺少，需要统计缺少次数（一天正常是三条）
 	// 5.统计到站记录到非人为缺测，对应缺少次数
 	// 缺测次数
 	public int calculateOne() {
 		// 应有次数， 一天三次
 		int times = days * 3;
-		int result = times - uniqueDatas.size();
+		
+		IncrementMap map = new IncrementMap();
+		for (Work work : uniqueDatas) {
+			String fileName = work.getFileName();
+			String date = fileName.substring(6, 14);
+			map.put(date);
+		}
+		int total = 0;
+		for (Integer value : map.values()) {
+			if (value >= 3) {
+				total += 3;
+			} else {
+				total += value;
+			}
+		}
+		int result = times - total;
+		
 		return result;
 	}
 
