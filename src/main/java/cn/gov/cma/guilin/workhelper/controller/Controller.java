@@ -26,6 +26,7 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -287,7 +288,7 @@ public class Controller {
 				{
 					HSSFCell cell3 = row.createCell(column++);
 					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(avgMap.get(name));
+					cell3.setCellValue(toSafe(avgMap.get(name)));
 				}
 				{
 					HSSFCell cell3 = row.createCell(column++);
@@ -302,17 +303,17 @@ public class Controller {
 				{
 					HSSFCell cell3 = row.createCell(column++);
 					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(timesMap2.get(name));
+					cell3.setCellValue(toSafe(timesMap2.get(name)));
 				}
 				{
 					HSSFCell cell3 = row.createCell(column++);
 					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(avgMap3.get(name));
+					cell3.setCellValue(toSafe(avgMap3.get(name)));
 				}
 				{
 					HSSFCell cell3 = row.createCell(column++);
 					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(timesMap3.get(name));
+					cell3.setCellValue(toSafe(timesMap3.get(name)));
 				}
 				
 				{
@@ -642,6 +643,10 @@ public class Controller {
 			result.put("message", "转换成功，当前未设置生成目录，默认生成在源文件同目录下");
 		}
 		return result;
+	}
+	
+	private Integer toSafe(Integer num) {
+		return num == null ? 0 : num;
 	}
 
 	private void setRowStyle(HSSFWorkbook wb, HSSFCell cell, CellStyle style) {
