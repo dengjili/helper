@@ -3,25 +3,35 @@ package cn.gov.cma.guilin.workhelper.controller;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.gov.cma.guilin.workhelper.controller.Calculation.SumMapFloat;
 import cn.gov.cma.guilin.workhelper.model.Work;
+import cn.gov.cma.guilin.workhelper.util.DateHelper;
 import cn.gov.cma.guilin.workhelper.util.FileHelper;
 
 public class Controller {
@@ -256,6 +266,439 @@ public class Controller {
 			logger.debug("{}", String.format("重复次数：%s", redo));
 			logger.debug("{}", String.format("===========站质量 统计========"));
 			
+			// 生成excel
+			String fileName = dataAll.get(0).getFileName();
+			Date date = DateHelper.getDate(fileName);
+			// 读取excel模板 .xls
+			InputStream inputStream = Controller.class.getClassLoader().getResourceAsStream("guilin-template2.xls");
+			HSSFWorkbook wb = new HSSFWorkbook(inputStream);
+
+			// 表头设置
+			HSSFSheet sheet = wb.getSheet("分站统计");
+			HSSFCell cell = sheet.getRow(0).getCell(0);
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy年 MM月");
+			cell.setCellValue(cell.getStringCellValue()+sdf.format(date));
+
+			// 其他辅助类
+			CreationHelper createHelper = wb.getCreationHelper();
+			CellStyle style = wb.createCellStyle();
+			CellStyle style2 = wb.createCellStyle();
+			CellStyle style3 = wb.createCellStyle();
+			CellStyle style4 = wb.createCellStyle();
+			
+			// 填充数据，以主班姓名为依据
+			int rows = 6;
+			for (Map.Entry<String, Integer> entry : calculateTwo.entrySet()) {
+				int column = 0;
+				String name = entry.getKey();
+				Integer majorTimes = entry.getValue();
+				HSSFRow row = sheet.createRow(rows);
+				row.setHeightInPoints(30);
+				HSSFCell cell1 = row.createCell(column++);
+				setRowStyle(wb, cell1, style);
+				cell1.setCellValue(createHelper.createRichTextString(name));
+				
+				HSSFCell cell2 = row.createCell(column++);
+				setRowStyleNumber(wb, cell2, style2);
+				cell2.setCellValue(majorTimes);
+				
+				// 后三列，定值为0
+				for (int i = 0; i < 3; i++) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(0);
+				}
+				
+				// 后三列为空
+				for (int i = 0; i < 3; i++) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				
+				// 早测列
+				Integer beforeTimes = calculateThree.get(name);
+				if (beforeTimes == null || beforeTimes == 0) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				} else {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(beforeTimes);
+				}
+				
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				// 非人为迟测
+				Integer afterTimes = 0; //calculateFour.get(name);
+				if (afterTimes == null || afterTimes == 0) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				} else {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(afterTimes);
+				}
+				
+				// 后6列为空
+				for (int i = 0; i < 6; i++) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(toSafe(avgMap.get(name)));
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(timesMap.get(name));
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(avgMap2.get(name));
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(toSafe(timesMap2.get(name)));
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(toSafe(avgMap3.get(name)));
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(toSafe(timesMap3.get(name)));
+				}
+				
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				
+				// 重复次数
+				Integer redoTimes = calculateEight.get(name);
+				if (redoTimes == null || redoTimes == 0) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				} else {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(redoTimes);
+				}
+				
+				// 后6列为空
+				for (int i = 0; i < 6; i++) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				
+				rows++;
+			}
+			
+			// 统计到站 一行
+			/**
+			{
+				int column = 1;
+				HSSFRow row = sheet.createRow(rows);
+				HSSFCell cell1 = row.createCell(column++);
+				setRowStyle(wb, cell1, style);
+				cell1.setCellValue(createHelper.createRichTextString("统计到站"));
+				// 后6列为空
+				for (int i = 0; i < 6; i++) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				if (miss == 0) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				} else {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(miss);
+				}
+				// 后9列为空
+				for (int i = 0; i < 9; i++) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					Integer value = avgMap.get("统计到站");
+					if (value == null || value == 0) {
+						setRowStyle(wb, cell3, style2);
+						cell3.setCellValue("");
+					} else {
+						setRowStyleNumber(wb, cell3, style2);
+						cell3.setCellValue(value);
+					};
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					Integer value = timesMap.get("统计到站");
+					if (value == null || value == 0) {
+						setRowStyle(wb, cell3, style2);
+						cell3.setCellValue("");
+					} else {
+						setRowStyleNumber(wb, cell3, style2);
+						cell3.setCellValue(value);
+					};
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					Integer value = avgMap2.get("统计到站");
+					if (value == null || value == 0) {
+						setRowStyle(wb, cell3, style2);
+						cell3.setCellValue("");
+					} else {
+						setRowStyleNumber(wb, cell3, style2);
+						cell3.setCellValue(value);
+					};
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					Integer value = timesMap2.get("统计到站");
+					if (value == null || value == 0) {
+						setRowStyle(wb, cell3, style2);
+						cell3.setCellValue("");
+					} else {
+						setRowStyleNumber(wb, cell3, style2);
+						cell3.setCellValue(value);
+					};
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					Integer value = avgMap3.get("统计到站");
+					if (value == null || value == 0) {
+						setRowStyle(wb, cell3, style2);
+						cell3.setCellValue("");
+					} else {
+						setRowStyleNumber(wb, cell3, style2);
+						cell3.setCellValue(value);
+					};
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					Integer value = timesMap3.get("统计到站");
+					if (value == null || value == 0) {
+						setRowStyle(wb, cell3, style2);
+						cell3.setCellValue("");
+					} else {
+						setRowStyleNumber(wb, cell3, style2);
+						cell3.setCellValue(value);
+					};
+				}
+				// 后8列为空
+				for (int i = 0; i < 8; i++) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				rows++;
+			}
+			*/
+			// 桂林 一行
+			{
+				int column = 0;
+				HSSFRow row = sheet.createRow(rows);
+				HSSFCell cell1 = row.createCell(column++);
+				setRowStyle(wb, cell1, style);
+				cell1.setCellValue(createHelper.createRichTextString("桂林"));
+				
+				HSSFCell cell2 = row.createCell(column++);
+				setRowStyleNumber(wb, cell2, style2);
+				cell2.setCellValue(major);
+				
+				// 后三列，定值为0
+				for (int i = 0; i < 3; i++) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(0);
+				}
+				
+				// 后三列为空
+				for (int i = 0; i < 2; i++) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				
+				// 非人为缺测
+				if (miss == 0) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				} else {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(miss);
+				}
+				
+				// 早测列
+				if (before == 0) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				} else {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(before);
+				}
+				
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				// 非人为迟测
+				if (0 == 0) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				} else {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(0);
+				}
+				
+				// 后6列为空
+				for (int i = 0; i < 6; i++) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(artAvg);
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(artTimes);
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(artAvg2);
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(artTimes2);
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(artAvg3);
+				}
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(artTimes3);
+				}
+				
+				{
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				
+				// 重复次数
+				if (redo == 0) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				} else {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyleNumber(wb, cell3, style2);
+					cell3.setCellValue(redo);
+				}
+				// 后6列为空
+				for (int i = 0; i < 6; i++) {
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue("");
+				}
+				
+				rows++;
+			}
+			
+			int begin = rows;
+			// 备注行
+			{
+				for (int i = 0; i < 6; i++) {
+					HSSFRow row = sheet.createRow(rows);
+					for (int j = 0; j < 32; j++) {
+						HSSFCell cell1 = row.createCell(j);
+						setRowStyle2(wb, cell1, style3);
+						cell1.setCellValue("备注：");
+					}
+					rows++;
+				}
+
+			}
+			int end = rows - 1;
+			sheet.addMergedRegion(new CellRangeAddress(
+					begin, //first row (0-based)
+					end, //last row  (0-based)
+					0, //first column (0-based)
+					31  //last column  (0-based)
+					));
+			
+			/**
+			String endTip = "                                                        填报者：        校对者：         日期：%s";
+			SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy年MM月dd日");
+			endTip = String.format(endTip, sdf2.format(new Date()));
+			
+			begin = rows;
+			// 结束语
+			{
+				for (int i = 0; i < 2; i++) {
+					HSSFRow row = sheet.createRow(rows);
+					for (int j = 1; j < 32; j++) {
+						HSSFCell cell1 = row.createCell(j);
+						setRowStyle3(wb, cell1, style4);
+						cell1.setCellValue(endTip);
+					}
+					rows++;
+				}
+
+			}
+			end = rows - 1;
+			sheet.addMergedRegion(new CellRangeAddress(
+					begin, //first row (0-based)
+					end, //last row  (0-based)
+					1, //first column (0-based)
+					31  //last column  (0-based)
+					));
+			*/
+			
+			try (OutputStream fileOut = new FileOutputStream(newFilePath)) {
+				wb.write(fileOut);
+			}
+
+			wb.close();
+
 		} catch (Exception e) {
 			logger.error("异常：", e);
 			logger.error(e.getMessage());
@@ -271,6 +714,10 @@ public class Controller {
 		}
 		return result;
 	}
+	
+	private Integer toSafe(Integer num) {
+		return num == null ? 0 : num;
+	}
 
 	private void setRowStyle(HSSFWorkbook wb, HSSFCell cell, CellStyle style) {
 		 // Style the cell with borders all around.
@@ -282,6 +729,7 @@ public class Controller {
 	    style.setRightBorderColor(IndexedColors.BLACK.getIndex());
 	    style.setBorderTop(BorderStyle.THIN);
 	    style.setTopBorderColor(IndexedColors.BLACK.getIndex());
+	    style.set
 	    cell.setCellStyle(style);
 	}
 	
