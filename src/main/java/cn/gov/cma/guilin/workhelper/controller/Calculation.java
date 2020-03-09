@@ -30,6 +30,7 @@ import cn.gov.cma.guilin.workhelper.util.DateHelper;
  * 13.01 信号突失/仪器故障  name探空高度和测风高度给校对者
  * 14.01 干扰/雷达故障  name探空高度和测风高度 给统计到站
  * 15. 重放球次数计算到非人为次数（白天计算者、晚上校验者）
+ * C:\Users\it\Desktop\高表21\57957站2019年12月值班日志.txt
  * </pre>
  */
 public class Calculation {
@@ -126,45 +127,102 @@ public class Calculation {
 	}
 	
 	// 正常放球时间段【7.15-7.21】 【19.15-19.21】 】1.15-1.21】
-	// 粗略计算迟测时间段(7.21 - 13.00)(19.21 - 0.00) (1.21 - 4.00)
+	// （07. 21.00 - 07.45.00）（07.46.00 - 08.15.00）（08.16.00 - 08.30.00）
+	//  (19 21.00 - 19.45.00)   (19.46.00 - 20.15.00) ( 20.16.00 -  20.30.00)
+	//  (01. 21.00 - 01.45.00)  (01.46.00 - 02.15.00) ( 02.16.00 -  02.30.00)
 	// 7.大于XX时21为非人为迟测，记录到主班对应的个人身上【非人为迟测】
-	public Map<String, Integer> calculateFour() throws Exception {
-		IncrementMap result = new IncrementMap();
+	public Map<String, Map<String, Integer>> calculateFour() throws Exception {
+		Map<String, Map<String, Integer>> all = new HashMap<String, Map<String,Integer>>();
+		
+		
+		IncrementMap one = new IncrementMap();
+		IncrementMap two = new IncrementMap();
+		IncrementMap three = new IncrementMap();
 
 		for (Work work : uniqueDatas) {
-			boolean isBefore = false;
 			String beginTime = work.getBeginTime();
 
-			// 满足任意区间都为早测
-			boolean result1 = DateHelper.isBetween(beginTime, "07.21.00", "13.00.00");
-			if (result1) {
-				isBefore = true;
+			boolean isAfterOne = false;
+			// 满足任意区间都为迟测
+			boolean resultOne1 = DateHelper.isBetween(beginTime, "07.21.00", "07.45.59");
+			if (resultOne1) {
+				isAfterOne = true;
 			}
-			boolean result2 = DateHelper.isBetween(beginTime, "19.21.00", "00.00.00");
-			if (result2) {
-				isBefore = true;
+			boolean resultOne2 = DateHelper.isBetween(beginTime, "07.46.00", "08.15.59");
+			if (resultOne2) {
+				isAfterOne = true;
 			}
-			boolean result3 = DateHelper.isBetween(beginTime, "01.21.00", "04.00.00");
-			if (result3) {
-				isBefore = true;
+			boolean resultOne3 = DateHelper.isBetween(beginTime, "08.16.00", "08.30.59");
+			if (resultOne3) {
+				isAfterOne = true;
 			}
 
-			if (isBefore) {
+			if (isAfterOne) {
 				if (work.isNomalMajor()) {
-					result.put(work.getCalculator());
+					one.put(work.getCalculator());
 				} else {
-					result.put(work.getChecktor());
+					one.put(work.getChecktor());
+				}
+			}
+			
+			boolean isAfterTwo = false;
+	
+			boolean resultTwo1 = DateHelper.isBetween(beginTime, "19.21.00", "19.45.59");
+			if (resultTwo1) {
+				isAfterTwo = true;
+			}
+			boolean resultTwo2 = DateHelper.isBetween(beginTime, "19.46.00", "20.15.59");
+			if (resultTwo2) {
+				isAfterTwo = true;
+			}
+			boolean resultTwo3 = DateHelper.isBetween(beginTime, " 20.16.00", " 20.30.59");
+			if (resultTwo3) {
+				isAfterTwo = true;
+			}
+
+			if (isAfterTwo) {
+				if (work.isNomalMajor()) {
+					two.put(work.getCalculator());
+				} else {
+					two.put(work.getChecktor());
+				}
+			}
+			
+			boolean isAfterThree = false;
+	
+			boolean resultThree1 = DateHelper.isBetween(beginTime, "01.21.00", "01.45.59");
+			if (resultThree1) {
+				isAfterThree = true;
+			}
+			boolean resultThree2 = DateHelper.isBetween(beginTime, "01.46.00", "02.15.59");
+			if (resultThree2) {
+				isAfterThree = true;
+			}
+			boolean resultThree3 = DateHelper.isBetween(beginTime, "02.16.00", "02.30.59");
+			if (resultThree3) {
+				isAfterThree = true;
+			}
+
+			if (isAfterThree) {
+				if (work.isNomalMajor()) {
+					three.put(work.getCalculator());
+				} else {
+					three.put(work.getChecktor());
 				}
 			}
 		}
-		return result;
+		all.put("levelOne", one);
+		all.put("levelTwo", two);
+		all.put("levelThree", three);
+		
+		return all;
 	}
 	
 	// 8.07/19 球炸  name探空高度和测风高度给校对者
 	// 9.07/19 信号突失/仪器故障 name探空高度和测风高度给计算着
 	// 10.07/19 干扰/雷达故障 name探空高度和测风高度 给统计到站
 	// 探空高度 计算
-	public Map<String, Map<String, Integer>> calculateFive() throws Exception {
+	public Map<String, Map<String, ?>> calculateFive() throws Exception {
 		IncrementAndAvg incrementAndAvg = new IncrementAndAvg();
 		for (Work work : uniqueDatas) {
 			
@@ -198,15 +256,26 @@ public class Calculation {
 		Map<String, Integer> timesMap = incrementAndAvg.getTimesMap();
 		Map<String, Long> sumMap = incrementAndAvg.getSumMap();
 		Map<String, Integer> avgMap = new HashMap<>();
+		Map<String, Float> scoreMap = new HashMap<>();
 		sumMap.forEach((k,v)->{
 			Integer times = timesMap.get(k);
 			Integer avg = (int) Math.round((v * 1.0 / times));
 			avgMap.put(k, avg);
+			if(avg >= 28600) {				
+				scoreMap.put(k, 15f);
+			}
+			else if(18600 < avg && avg < 28600) {				
+				scoreMap.put(k, (float) ((avg-18600) * 0.0015));
+			}
+			else if( avg <= 18600 ) {				
+				scoreMap.put(k, 0f);
+			}
 		});
 		
-		Map<String, Map<String, Integer>> result = new HashMap<>();
+		Map<String, Map<String, ?>> result = new HashMap<>();
 		result.put("TIMES", timesMap);
 		result.put("AVG", avgMap);
+		result.put("SCORE", scoreMap);
 		return result;
 	}
 	
@@ -214,7 +283,7 @@ public class Calculation {
 	// 9.07/19 信号突失/仪器故障 name探空高度和测风高度给计算着
 	// 10.07/19 干扰/雷达故障 name探空高度和测风高度 给统计到站
 	// 测风高度 综合计算
-	public Map<String, Map<String, Integer>> calculateSix() throws Exception {
+	public Map<String, Map<String, ?>> calculateSix() throws Exception {
 		IncrementAndAvg incrementAndAvg = new IncrementAndAvg();
 		for (Work work : uniqueDatas) {
 
@@ -248,15 +317,26 @@ public class Calculation {
 		Map<String, Integer> timesMap = incrementAndAvg.getTimesMap();
 		Map<String, Long> sumMap = incrementAndAvg.getSumMap();
 		Map<String, Integer> avgMap = new HashMap<>();
+		Map<String, Float> scoreMap = new HashMap<>();
 		sumMap.forEach((k, v) -> {
 			Integer times = timesMap.get(k);
 			Integer avg = (int) Math.round((v * 1.0 / times));
 			avgMap.put(k, avg);
+			if(avg >= 27000) {				
+				scoreMap.put(k, 12f);
+			}
+			else if(17000 < avg && avg < 27000) {				
+				scoreMap.put(k, (float) ((avg-17000) * 0.0012));
+			}
+			else if( avg <= 17000 ) {				
+				scoreMap.put(k, 0f);
+			}
 		});
 
-		Map<String, Map<String, Integer>> result = new HashMap<>();
+		Map<String, Map<String, ?>> result = new HashMap<>();
 		result.put("TIMES", timesMap);
 		result.put("AVG", avgMap);
+		result.put("SCORE", scoreMap);
 		return result;
 	}
 	
@@ -264,7 +344,7 @@ public class Calculation {
 	// 13.01 信号突失/仪器故障  name探空高度和测风高度给校对者
 	// 14.01 干扰/雷达故障  name探空高度和测风高度 给统计到站
 	// 测风高度 单测计算
-	public Map<String, Map<String, Integer>> calculateSeven() throws Exception {
+	public Map<String, Map<String, ?>> calculateSeven() throws Exception {
 		IncrementAndAvg incrementAndAvg = new IncrementAndAvg();
 		for (Work work : uniqueDatas) {
 			
@@ -298,15 +378,23 @@ public class Calculation {
 		Map<String, Integer> timesMap = incrementAndAvg.getTimesMap();
 		Map<String, Long> sumMap = incrementAndAvg.getSumMap();
 		Map<String, Integer> avgMap = new HashMap<>();
+		Map<String, Float> scoreMap = new HashMap<>();
 		sumMap.forEach((k, v) -> {
 			Integer times = timesMap.get(k);
 			Integer avg = (int) Math.round((v * 1.0 / times));
 			avgMap.put(k, avg);
+			if(avg >= 18000) {				
+				scoreMap.put(k, 3f);
+			}
+			else if( avg < 18000 ) {				
+				scoreMap.put(k, 0f);
+			}
 		});
 		
-		Map<String, Map<String, Integer>> result = new HashMap<>();
+		Map<String, Map<String, ?>> result = new HashMap<>();
 		result.put("TIMES", timesMap);
 		result.put("AVG", avgMap);
+		result.put("SCORE", scoreMap);
 		return result;
 	}
 	
@@ -348,6 +436,20 @@ public class Calculation {
 
 		public void putSum(String name, Long nums) {
 			Long now = get(name);
+			if (now == null) {
+				put(name, nums);
+			} else {
+				put(name, now + nums);
+			}
+		}
+	}
+	
+	// 累加类
+	public static class SumMapFloat extends HashMap<String, Float> {
+		private static final long serialVersionUID = 1L;
+
+		public void putSumFloat(String name, Float nums) {
+			Float now = get(name);
 			if (now == null) {
 				put(name, nums);
 			} else {

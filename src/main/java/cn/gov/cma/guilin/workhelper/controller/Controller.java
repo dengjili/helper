@@ -3,34 +3,25 @@ package cn.gov.cma.guilin.workhelper.controller;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.gov.cma.guilin.workhelper.controller.Calculation.SumMapFloat;
 import cn.gov.cma.guilin.workhelper.model.Work;
-import cn.gov.cma.guilin.workhelper.util.DateHelper;
 import cn.gov.cma.guilin.workhelper.util.FileHelper;
 
 public class Controller {
@@ -131,35 +122,98 @@ public class Controller {
 			logger.debug("{}", String.format("主班次数：%s, 总上班次数：%s", calculateTwo, total));
 			Map<String, Integer> calculateThree = calculation.calculateThree();
 			logger.debug("{}", String.format("早测次数：%s", calculateThree));
-			Map<String, Integer> calculateFour = calculation.calculateFour();
-			logger.debug("{}", String.format("非人为迟测次数：%s", calculateFour));
-			Map<String, Map<String, Integer>> calculateFive = calculation.calculateFive();
-			Map<String, Integer> timesMap = calculateFive.get("TIMES");
-			Map<String, Integer> avgMap = calculateFive.get("AVG");
+			
+			logger.debug("{}", String.format("早测满分10分。"));
+			
+			Map<String, Float> calculateThreeScore = new HashMap<String, Float>();
+			calculateThree.forEach((k,v)->{
+				calculateThreeScore.put(k, (float) (5.0 * calculateThree.get(k)));
+			});
+			calculateThreeScore.forEach((k,v)->{
+				logger.debug("{}", String.format("名字：%s, 扣分：%.2f", k, calculateThreeScore.get(k)));
+			});
+			
+			Map<String, Map<String, Integer>> calculateFour = calculation.calculateFour();
+			Map<String, Integer> levelOne = calculateFour.get("levelOne");
+			Map<String, Integer> levelTwo = calculateFour.get("levelTwo");
+			Map<String, Integer> levelThree = calculateFour.get("levelThree");
+			logger.debug("{}", String.format("非人为迟测次数（时间区间1）：%s", levelOne));
+			logger.debug("{}", String.format("非人为迟测次数（时间区间2）：%s", levelTwo));
+			logger.debug("{}", String.format("非人为迟测次数（时间区间3）：%s", levelThree));
+	
+			logger.debug("{}", String.format("非人为迟测满分10分。"));
+			SumMapFloat scoreMapFour = new SumMapFloat();
+			levelOne.forEach((k,v)->{
+				scoreMapFour.putSumFloat(k, (float) (0.5 * levelOne.get(k)));
+			});
+			levelTwo.forEach((k,v)->{
+				scoreMapFour.putSumFloat(k, (float) (1.0 * levelTwo.get(k)));
+			});
+			levelThree.forEach((k,v)->{
+				scoreMapFour.putSumFloat(k, (float) (1.5 * levelThree.get(k)));
+			});
+			scoreMapFour.forEach((k,v)->{
+				logger.debug("{}", String.format("名字：%s, 扣分： %.2f", k, scoreMapFour.get(k)));
+			});
+			
+			SumMapFloat scoreMapTotal = new SumMapFloat();
+			calculateThreeScore.forEach((k,v)->{
+				scoreMapTotal.putSumFloat(k, v);
+			});
+			scoreMapFour.forEach((k,v)->{
+				scoreMapTotal.putSumFloat(k, v);
+			});
+			logger.debug("{}", String.format("早测、迟测、任意终止观测得分30分。"));
+			scoreMapTotal.forEach((k,v)->{
+				logger.debug("{}", String.format("名字：%s, 总分： %.2f", k, 30.0 - scoreMapTotal.get(k)));
+			});
+			
+			Map<String, Map<String, ?>> calculateFive = calculation.calculateFive();
+			Map<String, Integer> timesMap = (Map<String, Integer>) calculateFive.get("TIMES");
+			Map<String, Integer> avgMap = (Map<String, Integer>) calculateFive.get("AVG");
+			Map<String, Float> scoreMap = (Map<String, Float>) calculateFive.get("SCORE");
 			logger.debug("{}", "探空高度");
 			timesMap.forEach((k,v)->{
-				logger.debug("{}", String.format("名字：%s, 平均高度：%s, 次数： %s", k, avgMap.get(k), v));
+				logger.debug("{}", String.format("名字：%s, 平均高度：%s, 得分： %.2f", k, avgMap.get(k), scoreMap.get(k)));
 			});
 			
-			Map<String, Map<String, Integer>> calculateSix = calculation.calculateSix();
-			Map<String, Integer> timesMap2 = calculateSix.get("TIMES");
-			Map<String, Integer> avgMap2 = calculateSix.get("AVG");
-			logger.debug("{}", "测风高度 综合");
+			Map<String, Map<String, ?>> calculateSix = calculation.calculateSix();
+			Map<String, Integer> timesMap2 = (Map<String, Integer>) calculateSix.get("TIMES");
+			Map<String, Integer> avgMap2 = (Map<String, Integer>) calculateSix.get("AVG");
+			Map<String, Float> scoreMap2 = (Map<String, Float>) calculateSix.get("SCORE");
+			logger.debug("{}", "测风高度综合");
 			timesMap2.forEach((k,v)->{
-				logger.debug("{}", String.format("名字：%s, 平均高度：%s, 次数： %s", k, avgMap2.get(k), v));
+				logger.debug("{}", String.format("名字：%s, 平均高度：%s, 得分：  %.2f", k, avgMap2.get(k), scoreMap2.get(k)));
 			});
 			
 			
-			Map<String, Map<String, Integer>> calculateSeven = calculation.calculateSeven();
-			Map<String, Integer> timesMap3 = calculateSeven.get("TIMES");
-			Map<String, Integer> avgMap3 = calculateSeven.get("AVG");
+			Map<String, Map<String, ?>> calculateSeven = calculation.calculateSeven();
+			Map<String, Integer> timesMap3 = (Map<String, Integer>) calculateSeven.get("TIMES");
+			Map<String, Integer> avgMap3 = (Map<String, Integer>) calculateSeven.get("AVG");
+			Map<String, Float> scoreMap3 = (Map<String, Float>) calculateSeven.get("SCORE");
 			logger.debug("{}", "测风高度 单测");
 			timesMap3.forEach((k,v)->{
-				logger.debug("{}", String.format("名字：%s, 平均高度：%s, 次数： %s", k, avgMap3.get(k), v));
+				logger.debug("{}", String.format("名字：%s, 平均高度：%s, 得分： %.2f", k, avgMap3.get(k), scoreMap3.get(k)));
+			});
+			logger.debug("{}", "测风高度得分");
+			timesMap3.forEach((k,v)->{
+				logger.debug("{}", String.format("名字：%s, 得分： %.2f", k,  scoreMap2.get(k) + scoreMap3.get(k)));
 			});
 			
 			Map<String, Integer> calculateEight = calculation.calculateEight();
 			logger.debug("{}", String.format("重复次数：%s", calculateEight));
+			
+			
+			Map<String, Float> calculateEightScore = new HashMap<>();
+			calculateEight.forEach((k, v) -> {
+				if (v <= 6) {
+					calculateEightScore.put(k, (float) (17 - 0.5 * v));
+				} else if (v > 6) {
+					int c = v - 6;
+					calculateEightScore.put(k, (float) (17 - 3 - 1 * c));
+				}
+			});
+			logger.debug("{}", String.format("重放球得分：%s", calculateEightScore));
 			
 			/** 站质量 统计   **/
 			logger.debug("{}", String.format("===========站质量 统计========"));
@@ -173,8 +227,12 @@ public class Controller {
 			int before = total(calculateThree);
 			logger.debug("{}", String.format("早测次数：%s", before));
 			// 非人为迟测次数
-			int after = total(calculateFour);
-			logger.debug("{}", String.format("非人为迟测次数：%s", after));
+			int afterOne = total(levelOne);
+			int afterTwo = total(levelTwo);
+			int afterThree = total(levelThree);
+			logger.debug("{}", String.format("非人为迟测次数（区间1）：%s", afterOne));
+			logger.debug("{}", String.format("非人为迟测次数（区间2）：%s", afterTwo));
+			logger.debug("{}", String.format("非人为迟测次数（区间3）：%s", afterThree));
 			// 探空高度平均高度
 			int artAvg = avg(avgMap);
 			logger.debug("{}", String.format("探空高度平均高度：%s", artAvg));
@@ -198,436 +256,6 @@ public class Controller {
 			logger.debug("{}", String.format("重复次数：%s", redo));
 			logger.debug("{}", String.format("===========站质量 统计========"));
 			
-			// 生成excel
-			String fileName = dataAll.get(0).getFileName();
-			Date date = DateHelper.getDate(fileName);
-			// 读取excel模板 .xls
-			InputStream inputStream = Controller.class.getClassLoader().getResourceAsStream("guilin-template.xls");
-			HSSFWorkbook wb = new HSSFWorkbook(inputStream);
-
-			// 表头设置
-			HSSFSheet sheet = wb.getSheet("Sheet1");
-			HSSFCell cell = sheet.getRow(1).getCell(1);
-			String dateStr = "        单位：桂林市气象局高空站         观测系统名称：L波段系统综合探测          统计时段：%s              ";
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月");
-			cell.setCellValue(String.format(dateStr, sdf.format(date)));
-
-			// 其他辅助类
-			CreationHelper createHelper = wb.getCreationHelper();
-			CellStyle style = wb.createCellStyle();
-			CellStyle style2 = wb.createCellStyle();
-			CellStyle style3 = wb.createCellStyle();
-			CellStyle style4 = wb.createCellStyle();
-			
-			// 填充数据，以主班姓名为依据
-			int rows = 9;
-			for (Map.Entry<String, Integer> entry : calculateTwo.entrySet()) {
-				int column = 1;
-				String name = entry.getKey();
-				Integer majorTimes = entry.getValue();
-				HSSFRow row = sheet.createRow(rows);
-				HSSFCell cell1 = row.createCell(column++);
-				setRowStyle(wb, cell1, style);
-				cell1.setCellValue(createHelper.createRichTextString(name));
-				
-				HSSFCell cell2 = row.createCell(column++);
-				setRowStyleNumber(wb, cell2, style2);
-				cell2.setCellValue(majorTimes);
-				
-				// 后三列，定值为0
-				for (int i = 0; i < 3; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(0);
-				}
-				
-				// 后三列为空
-				for (int i = 0; i < 3; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				
-				// 早测列
-				Integer beforeTimes = calculateThree.get(name);
-				if (beforeTimes == null || beforeTimes == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(beforeTimes);
-				}
-				
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				// 非人为迟测
-				Integer afterTimes = calculateFour.get(name);
-				if (afterTimes == null || afterTimes == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(afterTimes);
-				}
-				
-				// 后6列为空
-				for (int i = 0; i < 6; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(avgMap.get(name));
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(timesMap.get(name));
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(avgMap2.get(name));
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(timesMap2.get(name));
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(avgMap3.get(name));
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(timesMap3.get(name));
-				}
-				
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				
-				// 重复次数
-				Integer redoTimes = calculateEight.get(name);
-				if (redoTimes == null || redoTimes == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(redoTimes);
-				}
-				
-				// 后6列为空
-				for (int i = 0; i < 6; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				
-				rows++;
-			}
-			
-			// 统计到站 一行
-			{
-				int column = 1;
-				HSSFRow row = sheet.createRow(rows);
-				HSSFCell cell1 = row.createCell(column++);
-				setRowStyle(wb, cell1, style);
-				cell1.setCellValue(createHelper.createRichTextString("统计到站"));
-				// 后6列为空
-				for (int i = 0; i < 6; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				if (miss == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(miss);
-				}
-				// 后9列为空
-				for (int i = 0; i < 9; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					Integer value = avgMap.get("统计到站");
-					if (value == null || value == 0) {
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue("");
-					} else {
-						setRowStyleNumber(wb, cell3, style2);
-						cell3.setCellValue(value);
-					};
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					Integer value = timesMap.get("统计到站");
-					if (value == null || value == 0) {
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue("");
-					} else {
-						setRowStyleNumber(wb, cell3, style2);
-						cell3.setCellValue(value);
-					};
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					Integer value = avgMap2.get("统计到站");
-					if (value == null || value == 0) {
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue("");
-					} else {
-						setRowStyleNumber(wb, cell3, style2);
-						cell3.setCellValue(value);
-					};
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					Integer value = timesMap2.get("统计到站");
-					if (value == null || value == 0) {
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue("");
-					} else {
-						setRowStyleNumber(wb, cell3, style2);
-						cell3.setCellValue(value);
-					};
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					Integer value = avgMap3.get("统计到站");
-					if (value == null || value == 0) {
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue("");
-					} else {
-						setRowStyleNumber(wb, cell3, style2);
-						cell3.setCellValue(value);
-					};
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					Integer value = timesMap3.get("统计到站");
-					if (value == null || value == 0) {
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue("");
-					} else {
-						setRowStyleNumber(wb, cell3, style2);
-						cell3.setCellValue(value);
-					};
-				}
-				// 后8列为空
-				for (int i = 0; i < 8; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				rows++;
-			}
-			// 站质量 一行
-			{
-				int column = 1;
-				HSSFRow row = sheet.createRow(rows);
-				HSSFCell cell1 = row.createCell(column++);
-				setRowStyle(wb, cell1, style);
-				cell1.setCellValue(createHelper.createRichTextString("站质量"));
-				
-				HSSFCell cell2 = row.createCell(column++);
-				setRowStyleNumber(wb, cell2, style2);
-				cell2.setCellValue(major);
-				
-				// 后三列，定值为0
-				for (int i = 0; i < 3; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(0);
-				}
-				
-				// 后三列为空
-				for (int i = 0; i < 2; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				
-				// 非人为缺测
-				if (miss == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(miss);
-				}
-				
-				// 早测列
-				if (before == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(before);
-				}
-				
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				// 非人为迟测
-				if (after == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(after);
-				}
-				
-				// 后6列为空
-				for (int i = 0; i < 6; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(artAvg);
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(artTimes);
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(artAvg2);
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(artTimes2);
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(artAvg3);
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(artTimes3);
-				}
-				
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				
-				// 重复次数
-				if (redo == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(redo);
-				}
-				// 后6列为空
-				for (int i = 0; i < 6; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				
-				rows++;
-			}
-			
-			int begin = rows;
-			// 备注行
-			{
-				for (int i = 0; i < 6; i++) {
-					HSSFRow row = sheet.createRow(rows);
-					for (int j = 1; j < 32; j++) {
-						HSSFCell cell1 = row.createCell(j);
-						setRowStyle2(wb, cell1, style3);
-						cell1.setCellValue("备注：");
-					}
-					rows++;
-				}
-
-			}
-			int end = rows - 1;
-			sheet.addMergedRegion(new CellRangeAddress(
-					begin, //first row (0-based)
-					end, //last row  (0-based)
-					1, //first column (0-based)
-					31  //last column  (0-based)
-					));
-			
-			String endTip = "                                                        填报者：        校对者：         日期：%s";
-			SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy年MM月dd日");
-			endTip = String.format(endTip, sdf2.format(new Date()));
-			
-			begin = rows;
-			// 结束语
-			{
-				for (int i = 0; i < 2; i++) {
-					HSSFRow row = sheet.createRow(rows);
-					for (int j = 1; j < 32; j++) {
-						HSSFCell cell1 = row.createCell(j);
-						setRowStyle3(wb, cell1, style4);
-						cell1.setCellValue(endTip);
-					}
-					rows++;
-				}
-
-			}
-			end = rows - 1;
-			sheet.addMergedRegion(new CellRangeAddress(
-					begin, //first row (0-based)
-					end, //last row  (0-based)
-					1, //first column (0-based)
-					31  //last column  (0-based)
-					));
-			
-			
-			try (OutputStream fileOut = new FileOutputStream(newFilePath)) {
-				wb.write(fileOut);
-			}
-
-			wb.close();
-
 		} catch (Exception e) {
 			logger.error("异常：", e);
 			logger.error(e.getMessage());
@@ -724,5 +352,4 @@ public class Controller {
 		}
 		return (int) Math.round(tempTotal * 1.0 / calculateTwo.size());
 	}
-	
 }
