@@ -26,7 +26,6 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -203,15 +202,14 @@ public class Controller {
 			String fileName = dataAll.get(0).getFileName();
 			Date date = DateHelper.getDate(fileName);
 			// 读取excel模板 .xls
-			InputStream inputStream = Controller.class.getClassLoader().getResourceAsStream("guilin-template.xls");
+			InputStream inputStream = Controller.class.getClassLoader().getResourceAsStream("guilin-template2.xls");
 			HSSFWorkbook wb = new HSSFWorkbook(inputStream);
 
 			// 表头设置
-			HSSFSheet sheet = wb.getSheet("Sheet1");
-			HSSFCell cell = sheet.getRow(1).getCell(1);
-			String dateStr = "        单位：桂林市气象局高空站         观测系统名称：L波段系统综合探测          统计时段：%s              ";
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月");
-			cell.setCellValue(String.format(dateStr, sdf.format(date)));
+			HSSFSheet sheet = wb.getSheet("分站统计");
+			HSSFCell cell = sheet.getRow(0).getCell(0);
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy年 MM月");
+			cell.setCellValue(cell.getStringCellValue()+sdf.format(date));
 
 			// 其他辅助类
 			CreationHelper createHelper = wb.getCreationHelper();
@@ -221,9 +219,9 @@ public class Controller {
 			CellStyle style4 = wb.createCellStyle();
 			
 			// 填充数据，以主班姓名为依据
-			int rows = 9;
+			int rows = 6;
 			for (Map.Entry<String, Integer> entry : calculateTwo.entrySet()) {
-				int column = 1;
+				int column = 0;
 				String name = entry.getKey();
 				Integer majorTimes = entry.getValue();
 				HSSFRow row = sheet.createRow(rows);
@@ -345,6 +343,7 @@ public class Controller {
 			}
 			
 			// 统计到站 一行
+			/**
 			{
 				int column = 1;
 				HSSFRow row = sheet.createRow(rows);
@@ -446,13 +445,14 @@ public class Controller {
 				}
 				rows++;
 			}
-			// 站质量 一行
+			*/
+			// 桂林 一行
 			{
-				int column = 1;
+				int column = 0;
 				HSSFRow row = sheet.createRow(rows);
 				HSSFCell cell1 = row.createCell(column++);
 				setRowStyle(wb, cell1, style);
-				cell1.setCellValue(createHelper.createRichTextString("站质量"));
+				cell1.setCellValue(createHelper.createRichTextString("桂林"));
 				
 				HSSFCell cell2 = row.createCell(column++);
 				setRowStyleNumber(wb, cell2, style2);
@@ -579,7 +579,7 @@ public class Controller {
 			{
 				for (int i = 0; i < 6; i++) {
 					HSSFRow row = sheet.createRow(rows);
-					for (int j = 1; j < 32; j++) {
+					for (int j = 0; j < 32; j++) {
 						HSSFCell cell1 = row.createCell(j);
 						setRowStyle2(wb, cell1, style3);
 						cell1.setCellValue("备注：");
@@ -592,10 +592,11 @@ public class Controller {
 			sheet.addMergedRegion(new CellRangeAddress(
 					begin, //first row (0-based)
 					end, //last row  (0-based)
-					1, //first column (0-based)
+					0, //first column (0-based)
 					31  //last column  (0-based)
 					));
 			
+			/**
 			String endTip = "                                                        填报者：        校对者：         日期：%s";
 			SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy年MM月dd日");
 			endTip = String.format(endTip, sdf2.format(new Date()));
@@ -621,7 +622,7 @@ public class Controller {
 					1, //first column (0-based)
 					31  //last column  (0-based)
 					));
-			
+			*/
 			
 			try (OutputStream fileOut = new FileOutputStream(newFilePath)) {
 				wb.write(fileOut);
