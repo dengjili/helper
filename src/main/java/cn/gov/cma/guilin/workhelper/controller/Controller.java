@@ -284,125 +284,134 @@ public class Controller {
 			CellStyle style = wb.createCellStyle();
 			CellStyle style2 = wb.createCellStyle();
 			CellStyle style3 = wb.createCellStyle();
-			CellStyle style4 = wb.createCellStyle();
 			
 			// 填充数据，以主班姓名为依据
 			int rows = 6;
 			for (Map.Entry<String, Integer> entry : calculateTwo.entrySet()) {
 				int column = 0;
 				String name = entry.getKey();
-				Integer majorTimes = entry.getValue();
 				HSSFRow row = sheet.createRow(rows);
 				row.setHeightInPoints(30);
-				HSSFCell cell1 = row.createCell(column++);
-				setRowStyle(wb, cell1, style);
-				cell1.setCellValue(createHelper.createRichTextString(name));
+				HSSFCell ncell1 = row.createCell(column++);
+				setRowStyle(wb, ncell1, style);
+				ncell1.setCellValue(createHelper.createRichTextString(name));
 				
-				HSSFCell cell2 = row.createCell(column++);
-				setRowStyleNumber(wb, cell2, style2);
-				cell2.setCellValue(majorTimes);
+				// 探空平均高度
+				HSSFCell ncell2 = row.createCell(column++);
+				setRowStyleNumber(wb, ncell2, style2);
+				ncell2.setCellValue(avgMap.get(name));
 				
-				// 后三列，定值为0
-				for (int i = 0; i < 3; i++) {
+				HSSFCell ncell3 = row.createCell(column++);
+				setRowStyleNumber(wb, ncell3, style2);
+				ncell3.setCellValue(Double.parseDouble(String.format("%.2f", scoreMap.get(name))));
+				
+				// 综合测风平均高度
+				HSSFCell ncell4 = row.createCell(column++);
+				setRowStyleNumber(wb, ncell4, style2);
+				ncell4.setCellValue(avgMap2.get(name));
+				
+				HSSFCell ncell5 = row.createCell(column++);
+				setRowStyleNumber(wb, ncell5, style2);
+				ncell5.setCellValue(Double.parseDouble(String.format("%.2f", scoreMap2.get(name))));
+				// 02时单独测风高度
+				HSSFCell ncell6 = row.createCell(column++);
+				setRowStyleNumber(wb, ncell6, style2);
+				ncell6.setCellValue(avgMap3.get(name));
+				
+				HSSFCell ncell7 = row.createCell(column++);
+				setRowStyleNumber(wb, ncell7, style2);
+				ncell7.setCellValue(Double.parseDouble(String.format("%.2f", scoreMap3.get(name))));
+				// 测风高度得分
+				HSSFCell ncell8 = row.createCell(column++);
+				setRowStyleNumber(wb, ncell8, style2);
+				ncell8.setCellValue(Double.parseDouble(String.format("%.2f", scoreMap2.get(name) + scoreMap3.get(name))));
+				// 报文资料质量 固定100
+				HSSFCell ncell9 = row.createCell(column++);
+				setRowStyleNumber(wb, ncell9, style2);
+				ncell9.setCellValue(100);
+				// 报文质量得分 固定15
+				HSSFCell ncell10 = row.createCell(column++);
+				setRowStyleNumber(wb, ncell10, style2);
+				ncell10.setCellValue(100);
+				
+				// 重放球
+				{
+					HSSFCell cell1 = row.createCell(column++);
+					setRowStyle(wb, cell1, style2);
+					cell1.setCellValue(toSafe(calculateEight.get(name)));
+					HSSFCell cell2 = row.createCell(column++);
+					setRowStyleNumber(wb, cell2, style2);
+					cell2.setCellValue(0);
 					HSSFCell cell3 = row.createCell(column++);
 					setRowStyleNumber(wb, cell3, style2);
 					cell3.setCellValue(0);
+					HSSFCell cell4 = row.createCell(column++);
+					setRowStyleNumber(wb, cell4, style2);
+					Float value = calculateEightScore.get(name);
+					if (value == null) {
+						cell4.setCellValue(17);
+					} else {
+						cell4.setCellValue(value);
+					}
 				}
 				
-				// 后三列为空
+				// 施放不合格仪器次数
+				{
+					HSSFCell cell1 = row.createCell(column++);
+					setRowStyleNumber(wb, cell1, style2);
+					cell1.setCellValue(0);
+					HSSFCell cell2 = row.createCell(column++);
+					setRowStyleNumber(wb, cell2, style2);
+					cell2.setCellValue(8);
+				}
+				
+				// 早测次数
+				HSSFCell ncell11 = row.createCell(column++);
+				setRowStyleNumber(wb, ncell11, style2);
+				ncell11.setCellValue(toSafe(calculateThree.get(name)));
+				// 早测扣分
+				HSSFCell ncell12 = row.createCell(column++);
+				setRowStyleNumber(wb, ncell12, style2);
+				ncell12.setCellValue(Float.parseFloat(String.format("%.2f", FileHelper.safeGetFloat(calculateThreeScore.get(name)))));
+				
+				// 人为迟测
 				for (int i = 0; i < 3; i++) {
 					HSSFCell cell3 = row.createCell(column++);
 					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
+					cell3.setCellValue(0);
 				}
 				
-				// 早测列
-				Integer beforeTimes = calculateThree.get(name);
-				if (beforeTimes == null || beforeTimes == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(beforeTimes);
-				}
-				
+				//非人为迟测
 				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				// 非人为迟测
-				Integer afterTimes = 0; //calculateFour.get(name);
-				if (afterTimes == null || afterTimes == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
+					HSSFCell cell1 = row.createCell(column++);
+					setRowStyleNumber(wb, cell1, style2);
+					cell1.setCellValue(toSafe(levelOne.get(name)));
+					HSSFCell cell2 = row.createCell(column++);
+					setRowStyleNumber(wb, cell2, style2);
+					cell2.setCellValue(toSafe(levelTwo.get(name)));
 					HSSFCell cell3 = row.createCell(column++);
 					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(afterTimes);
+					cell3.setCellValue(toSafe(levelThree.get(name)));
+					HSSFCell cell4 = row.createCell(column++);
+					setRowStyleNumber(wb, cell4, style2);
+					cell4.setCellValue(Float.parseFloat(String.format("%.2f", FileHelper.safeGetFloat(scoreMapFour.get(name)))));
 				}
-				
-				// 后6列为空
-				for (int i = 0; i < 6; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				
+				// 扣分 5项
 				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(toSafe(avgMap.get(name)));
+					for (int i = 0; i < 5; i++) {
+						HSSFCell cell3 = row.createCell(column++);
+						setRowStyle(wb, cell3, style2);
+						cell3.setCellValue(0);
+					}
 				}
+				// 早测、迟测、任意终止观测得分
 				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(timesMap.get(name));
+					HSSFCell cell4 = row.createCell(column++);
+					setRowStyleNumber(wb, cell4, style2);
+					cell4.setCellValue(Float.parseFloat(String.format("%.2f", 30.0 - toSafe(scoreMapTotal.get(name)))));
 				}
+				// 业务过程得分
 				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(avgMap2.get(name));
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(toSafe(timesMap2.get(name)));
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(toSafe(avgMap3.get(name)));
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(toSafe(timesMap3.get(name)));
-				}
-				
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				
-				// 重复次数
-				Integer redoTimes = calculateEight.get(name);
-				if (redoTimes == null || redoTimes == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(redoTimes);
-				}
-				
-				// 后6列为空
-				for (int i = 0; i < 6; i++) {
 					HSSFCell cell3 = row.createCell(column++);
 					setRowStyle(wb, cell3, style2);
 					cell3.setCellValue("");
@@ -411,114 +420,11 @@ public class Controller {
 				rows++;
 			}
 			
-			// 统计到站 一行
-			/**
-			{
-				int column = 1;
-				HSSFRow row = sheet.createRow(rows);
-				HSSFCell cell1 = row.createCell(column++);
-				setRowStyle(wb, cell1, style);
-				cell1.setCellValue(createHelper.createRichTextString("统计到站"));
-				// 后6列为空
-				for (int i = 0; i < 6; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				if (miss == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyleNumber(wb, cell3, style2);
-					cell3.setCellValue(miss);
-				}
-				// 后9列为空
-				for (int i = 0; i < 9; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					Integer value = avgMap.get("统计到站");
-					if (value == null || value == 0) {
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue("");
-					} else {
-						setRowStyleNumber(wb, cell3, style2);
-						cell3.setCellValue(value);
-					};
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					Integer value = timesMap.get("统计到站");
-					if (value == null || value == 0) {
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue("");
-					} else {
-						setRowStyleNumber(wb, cell3, style2);
-						cell3.setCellValue(value);
-					};
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					Integer value = avgMap2.get("统计到站");
-					if (value == null || value == 0) {
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue("");
-					} else {
-						setRowStyleNumber(wb, cell3, style2);
-						cell3.setCellValue(value);
-					};
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					Integer value = timesMap2.get("统计到站");
-					if (value == null || value == 0) {
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue("");
-					} else {
-						setRowStyleNumber(wb, cell3, style2);
-						cell3.setCellValue(value);
-					};
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					Integer value = avgMap3.get("统计到站");
-					if (value == null || value == 0) {
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue("");
-					} else {
-						setRowStyleNumber(wb, cell3, style2);
-						cell3.setCellValue(value);
-					};
-				}
-				{
-					HSSFCell cell3 = row.createCell(column++);
-					Integer value = timesMap3.get("统计到站");
-					if (value == null || value == 0) {
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue("");
-					} else {
-						setRowStyleNumber(wb, cell3, style2);
-						cell3.setCellValue(value);
-					};
-				}
-				// 后8列为空
-				for (int i = 0; i < 8; i++) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				}
-				rows++;
-			}
-			*/
 			// 桂林 一行
 			{
 				int column = 0;
 				HSSFRow row = sheet.createRow(rows);
+				row.setHeightInPoints(30);
 				HSSFCell cell1 = row.createCell(column++);
 				setRowStyle(wb, cell1, style);
 				cell1.setCellValue(createHelper.createRichTextString("桂林"));
@@ -569,11 +475,7 @@ public class Controller {
 					cell3.setCellValue("");
 				}
 				// 非人为迟测
-				if (0 == 0) {
-					HSSFCell cell3 = row.createCell(column++);
-					setRowStyle(wb, cell3, style2);
-					cell3.setCellValue("");
-				} else {
+				{
 					HSSFCell cell3 = row.createCell(column++);
 					setRowStyleNumber(wb, cell3, style2);
 					cell3.setCellValue(0);
@@ -646,7 +548,7 @@ public class Controller {
 			int begin = rows;
 			// 备注行
 			{
-				for (int i = 0; i < 6; i++) {
+				for (int i = 0; i < 12; i++) {
 					HSSFRow row = sheet.createRow(rows);
 					for (int j = 0; j < 32; j++) {
 						HSSFCell cell1 = row.createCell(j);
@@ -664,34 +566,6 @@ public class Controller {
 					0, //first column (0-based)
 					31  //last column  (0-based)
 					));
-			
-			/**
-			String endTip = "                                                        填报者：        校对者：         日期：%s";
-			SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy年MM月dd日");
-			endTip = String.format(endTip, sdf2.format(new Date()));
-			
-			begin = rows;
-			// 结束语
-			{
-				for (int i = 0; i < 2; i++) {
-					HSSFRow row = sheet.createRow(rows);
-					for (int j = 1; j < 32; j++) {
-						HSSFCell cell1 = row.createCell(j);
-						setRowStyle3(wb, cell1, style4);
-						cell1.setCellValue(endTip);
-					}
-					rows++;
-				}
-
-			}
-			end = rows - 1;
-			sheet.addMergedRegion(new CellRangeAddress(
-					begin, //first row (0-based)
-					end, //last row  (0-based)
-					1, //first column (0-based)
-					31  //last column  (0-based)
-					));
-			*/
 			
 			try (OutputStream fileOut = new FileOutputStream(newFilePath)) {
 				wb.write(fileOut);
@@ -718,6 +592,9 @@ public class Controller {
 	private Integer toSafe(Integer num) {
 		return num == null ? 0 : num;
 	}
+	private Float toSafe(Float num) {
+		return num == null ? 0f : num;
+	}
 
 	private void setRowStyle(HSSFWorkbook wb, HSSFCell cell, CellStyle style) {
 		 // Style the cell with borders all around.
@@ -729,7 +606,8 @@ public class Controller {
 	    style.setRightBorderColor(IndexedColors.BLACK.getIndex());
 	    style.setBorderTop(BorderStyle.THIN);
 	    style.setTopBorderColor(IndexedColors.BLACK.getIndex());
-	    style.set
+	    style.setAlignment(HorizontalAlignment.CENTER);
+	    style.setVerticalAlignment(VerticalAlignment.CENTER);
 	    cell.setCellStyle(style);
 	}
 	

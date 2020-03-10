@@ -53,4 +53,18 @@ public interface FileHelper {
 		List<Work> uniquedatas = new ArrayList<>(dataMap.values());
 		return uniquedatas;
 	}
+	
+	public static Integer safeGetInteger(Integer input) {
+		if (input == null) {
+			return 0;
+		}
+		return input;
+	}
+	
+	public static Float safeGetFloat(Float input) {
+		if (input == null) {
+			return 0f;
+		}
+		return input;
+	}
 }
