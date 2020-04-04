@@ -689,10 +689,10 @@ public class Controller {
 			return result;
 		}
 
-		result.put("message", "转换成功");
+		result.put("message", "成功");
 		if (Objects.isNull(destPath) || "".equals(destPath)) {
 			result.put("flag", "0");
-			result.put("message", "转换成功，当前未设置生成目录，默认生成在源文件同目录下");
+			result.put("message", "成功，当前未填写另存目录，默认生成在值班日志同一目录下");
 		}
 		return result;
 	}

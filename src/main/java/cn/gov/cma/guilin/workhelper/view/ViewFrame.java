@@ -45,9 +45,9 @@ public class ViewFrame {
 	}
 
 	private void setViewFrameLayout() {
-		JButton converButton = new JButton("转换");
-		JButton originButton = new JButton("源文件");
-		JButton destButton = new JButton("生成目录");
+		JButton converButton = new JButton("开始生成");
+		JButton originButton = new JButton("导入值班日志");
+		JButton destButton = new JButton("文件另存为");
 		JTextField originField = new JTextField(50);
 		JTextField destField = new JTextField(50);
 		GridBagConstraints constraints = new GridBagConstraints();
@@ -98,7 +98,7 @@ public class ViewFrame {
 	}
 
 	private void initViewFrame() {
-		frame.setTitle("桂林市气象局转换工具");
+		frame.setTitle("桂林高空探测质量统计表生成工具");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);// 设置其顶层容器的关闭性
 		frame.add(panel, BorderLayout.WEST); // 添加一个面板
 		panel.setLayout(new GridBagLayout()); // 对区域进行网络划分，不同之处在于，组件可以占据一个网格，也可以占据几个网格。
