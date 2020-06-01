@@ -49,9 +49,28 @@ public interface FileHelper {
 	public static List<Work> converUnique(List<Work> dataAll){
 		// 利用map的数据特性，key唯一，后面的值会覆盖前面的值
 		Map<String, Work> dataMap = new HashMap<>();
-		dataAll.forEach((work)->dataMap.put(work.getFileName(), work));
+		String lastFileName = "";
+		String lastSubFileName = "";
+		for (Work work : dataAll) {
+			String fileName = work.getFileName();
+			String subFileName = fileName.substring(0, 14);
+			if (!lastSubFileName.equals(subFileName)) {
+				dataMap.put(fileName, work);
+				lastSubFileName = subFileName;
+				lastFileName = fileName;
+			} else {
+				work.setFileName(lastFileName);
+				work.setManyTimes(true);
+				dataMap.put(lastFileName, work);
+			}
+		}
 		List<Work> uniquedatas = new ArrayList<>(dataMap.values());
 		return uniquedatas;
+	}
+	
+	public static void main(String[] args) {
+		String aaa = "s5795720200531.19";
+		System.out.println(aaa.substring(0, 14));
 	}
 	
 	public static Integer safeGetInteger(Integer input) {
