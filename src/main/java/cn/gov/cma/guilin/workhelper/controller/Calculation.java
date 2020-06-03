@@ -17,8 +17,8 @@ import cn.gov.cma.guilin.workhelper.util.DateHelper;
  * <pre>
  * 1.统计每月天数是否正常，如果缺少，需要统计缺少次数（一天正常是三条）
  * 2.如果文件名重复，后面覆盖前面的
- * 3.7点和19点是主班次数，对应计算者（删除）
- * 4.01点是主班次数，对应校验者（删除）
+ * 3.7点和19点是主班次数，对应计算者
+ * 4.01点是主班次数，对应校验者
  * 5.统计到站记录到非人为缺测，对应缺少次数
  * 6.少于XX时15为早测，记录到主班对应的个人身上【早测】
  * 7.大于XX时21为非人为迟测，记录到主班对应的个人身上【非人为迟测】
@@ -148,11 +148,11 @@ public class Calculation {
 			if (resultOne1) {
 				isAfterOne = true;
 			}
-			boolean resultOne2 = DateHelper.isBetween(beginTime, "07.46.00", "08.15.59");
+			boolean resultOne2 = DateHelper.isBetween(beginTime, "19.21.00", "19.45.59");
 			if (resultOne2) {
 				isAfterOne = true;
 			}
-			boolean resultOne3 = DateHelper.isBetween(beginTime, "08.16.00", "08.30.59");
+			boolean resultOne3 = DateHelper.isBetween(beginTime, "01.21.00", "01.45.59");
 			if (resultOne3) {
 				isAfterOne = true;
 			}
@@ -167,7 +167,7 @@ public class Calculation {
 			
 			boolean isAfterTwo = false;
 	
-			boolean resultTwo1 = DateHelper.isBetween(beginTime, "19.21.00", "19.45.59");
+			boolean resultTwo1 = DateHelper.isBetween(beginTime, "07.46.00", "08.15.59");
 			if (resultTwo1) {
 				isAfterTwo = true;
 			}
@@ -175,7 +175,7 @@ public class Calculation {
 			if (resultTwo2) {
 				isAfterTwo = true;
 			}
-			boolean resultTwo3 = DateHelper.isBetween(beginTime, " 20.16.00", " 20.30.59");
+			boolean resultTwo3 = DateHelper.isBetween(beginTime, "01.46.00", "02.15.59");
 			if (resultTwo3) {
 				isAfterTwo = true;
 			}
@@ -190,11 +190,11 @@ public class Calculation {
 			
 			boolean isAfterThree = false;
 	
-			boolean resultThree1 = DateHelper.isBetween(beginTime, "01.21.00", "01.45.59");
+			boolean resultThree1 = DateHelper.isBetween(beginTime, "08.16.00", "08.30.59");
 			if (resultThree1) {
 				isAfterThree = true;
 			}
-			boolean resultThree2 = DateHelper.isBetween(beginTime, "01.46.00", "02.15.59");
+			boolean resultThree2 = DateHelper.isBetween(beginTime, "20.16.00", "20.30.59");
 			if (resultThree2) {
 				isAfterThree = true;
 			}
@@ -219,7 +219,7 @@ public class Calculation {
 	}
 	
 	// 8.07/19 球炸  name探空高度和测风高度给校对者
-	// 9.07/19 信号突失/仪器故障 name探空高度和测风高度给计算着
+	// 9.07/19 信号突失/仪器故障/信号不清  name探空高度和测风高度给计算着
 	// 10.07/19 干扰/雷达故障 name探空高度和测风高度 给统计到站
 	// 探空高度 计算
 	public Map<String, Map<String, ?>> calculateFive() throws Exception {
@@ -239,14 +239,17 @@ public class Calculation {
 			case "信号突失":
 				incrementAndAvg.put(work.getCalculator(), Long.parseLong(work.getAirStopHight()));
 				break;
+			case "信号不清":
+				incrementAndAvg.put(work.getCalculator(), Long.parseLong(work.getAirStopHight()));
+				break;
 			case "仪器故障":
 				incrementAndAvg.put(work.getCalculator(), Long.parseLong(work.getAirStopHight()));
 				break;
 			case "干扰":
-				incrementAndAvg.put("统计到站", Long.parseLong(work.getAirStopHight()));
+			//	incrementAndAvg.put("统计到站", Long.parseLong(work.getAirStopHight()));
 				break;
 			case "雷达故障":
-				incrementAndAvg.put("统计到站", Long.parseLong(work.getAirStopHight()));
+				//incrementAndAvg.put("统计到站", Long.parseLong(work.getAirStopHight()));
 				break;
 			default:
 				break;
@@ -280,7 +283,7 @@ public class Calculation {
 	}
 	
 	// 8.07/19 球炸 name探空高度和测风高度给校对者
-	// 9.07/19 信号突失/仪器故障 name探空高度和测风高度给计算着
+	// 9.07/19 信号突失/仪器故障/信号不清 name探空高度和测风高度给计算着
 	// 10.07/19 干扰/雷达故障 name探空高度和测风高度 给统计到站
 	// 测风高度 综合计算
 	public Map<String, Map<String, ?>> calculateSix() throws Exception {
@@ -300,14 +303,17 @@ public class Calculation {
 			case "信号突失":
 				incrementAndAvg.put(work.getCalculator(), Long.parseLong(work.getWindStopHight()));
 				break;
+			case "信号不清":
+				incrementAndAvg.put(work.getCalculator(), Long.parseLong(work.getWindStopHight()));
+				break;
 			case "仪器故障":
 				incrementAndAvg.put(work.getCalculator(), Long.parseLong(work.getWindStopHight()));
 				break;
 			case "干扰":
-				incrementAndAvg.put("统计到站", Long.parseLong(work.getWindStopHight()));
+			//	incrementAndAvg.put("统计到站", Long.parseLong(work.getWindStopHight()));
 				break;
 			case "雷达故障":
-				incrementAndAvg.put("统计到站", Long.parseLong(work.getWindStopHight()));
+			//	incrementAndAvg.put("统计到站", Long.parseLong(work.getWindStopHight()));
 				break;
 			default:
 				break;
@@ -341,7 +347,7 @@ public class Calculation {
 	}
 	
 	// 12.01 球炸  name探空高度和测风高度给计算着
-	// 13.01 信号突失/仪器故障  name探空高度和测风高度给校对者
+	// 13.01 信号突失/仪器故障 /信号不清 name探空高度和测风高度给校对者
 	// 14.01 干扰/雷达故障  name探空高度和测风高度 给统计到站
 	// 测风高度 单测计算
 	public Map<String, Map<String, ?>> calculateSeven() throws Exception {
@@ -361,14 +367,17 @@ public class Calculation {
 			case "信号突失":
 				incrementAndAvg.put(work.getChecktor(), Long.parseLong(work.getWindStopHight()));
 				break;
+			case "信号不清":
+				incrementAndAvg.put(work.getChecktor(), Long.parseLong(work.getWindStopHight()));
+				break;
 			case "仪器故障":
 				incrementAndAvg.put(work.getChecktor(), Long.parseLong(work.getWindStopHight()));
 				break;
 			case "干扰":
-				incrementAndAvg.put("统计到站", Long.parseLong(work.getWindStopHight()));
+				//incrementAndAvg.put("统计到站", Long.parseLong(work.getWindStopHight()));
 				break;
 			case "雷达故障":
-				incrementAndAvg.put("统计到站", Long.parseLong(work.getWindStopHight()));
+				//incrementAndAvg.put("统计到站", Long.parseLong(work.getWindStopHight()));
 				break;
 			default:
 				break;

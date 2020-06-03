@@ -341,7 +341,7 @@ public class Controller {
 				// 报文质量得分 固定15
 				HSSFCell ncell10 = row.createCell(column++);
 				setRowStyleNumber(wb, ncell10, style2);
-				ncell10.setCellValue(100);
+				ncell10.setCellValue(15);
 				
 				// 重放球
 				{
@@ -537,14 +537,15 @@ public class Controller {
 					setRowStyleNumber(wb, ncell33, style2);
 					ncell33.setCellValue(Double.parseDouble(String.format("%.2f", t)));
 				}
-				
-				// 后2列为100
 				{
-					for (int i = 0; i < 2; i++) {
-						HSSFCell cell3 = row.createCell(column++);
-						setRowStyle(wb, cell3, style2);
-						cell3.setCellValue(100);
-					}
+				// 报文质量100，报文得分15
+					HSSFCell cell3 = row.createCell(column++);
+					setRowStyle(wb, cell3, style2);
+					cell3.setCellValue(100);
+					
+					HSSFCell cell4 = row.createCell(column++);
+					setRowStyle(wb, cell4, style2);
+					cell4.setCellValue(15);
 				}
 				
 				float finalTotal2 = 0;
