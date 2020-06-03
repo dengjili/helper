@@ -140,6 +140,10 @@ public class Calculation {
 		IncrementMap three = new IncrementMap();
 
 		for (Work work : uniqueDatas) {
+			boolean manyTimes = work.isManyTimes();
+			if (manyTimes) {
+				continue;
+			}
 			String beginTime = work.getBeginTime();
 
 			boolean isAfterOne = false;

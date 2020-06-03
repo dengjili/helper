@@ -11,6 +11,7 @@ public class Work {
 	private String calculator;//计算者
 	private String checktor;//校对者
 	private String approvetor;//预审者
+	private boolean manyTimes = false;
 	/**
 	 * 7点和19点是主班次数，对应计算者，默认为true
 	 * 如果为false,将对应01点是主班次数，对应校验者
@@ -82,6 +83,12 @@ public class Work {
 	}
 	public void setNomalMajor(boolean nomalMajor) {
 		this.nomalMajor = nomalMajor;
+	}
+	public boolean isManyTimes() {
+		return manyTimes;
+	}
+	public void setManyTimes(boolean manyTimes) {
+		this.manyTimes = manyTimes;
 	}
 	@Override
 	public String toString() {
