@@ -144,6 +144,12 @@ public class Calculation {
 			if (manyTimes) {
 				continue;
 			}
+			
+			boolean nomalMajor = work.isNomalMajor();
+			if (!nomalMajor) {
+				continue;
+			}
+			
 			String beginTime = work.getBeginTime();
 
 			boolean isAfterOne = false;
@@ -162,7 +168,7 @@ public class Calculation {
 			}
 
 			if (isAfterOne) {
-				if (work.isNomalMajor()) {
+				if (nomalMajor) {
 					one.put(work.getCalculator());
 				} else {
 					one.put(work.getChecktor());
@@ -185,7 +191,7 @@ public class Calculation {
 			}
 
 			if (isAfterTwo) {
-				if (work.isNomalMajor()) {
+				if (nomalMajor) {
 					two.put(work.getCalculator());
 				} else {
 					two.put(work.getChecktor());
@@ -208,7 +214,7 @@ public class Calculation {
 			}
 
 			if (isAfterThree) {
-				if (work.isNomalMajor()) {
+				if (nomalMajor) {
 					three.put(work.getCalculator());
 				} else {
 					three.put(work.getChecktor());
@@ -416,9 +422,13 @@ public class Calculation {
 		IncrementMap result = new IncrementMap();
 		Set<String> fileNameSet = new HashSet<>(dataAll.size() * 2);
 		for (Work work : dataAll) {
+			boolean nomalMajor = work.isNomalMajor();
+			if (!nomalMajor) {
+				continue;
+			}
 			String fileName = work.getFileName();
 			if (fileNameSet.contains(fileName)) {
-				if (work.isNomalMajor()) {
+				if (nomalMajor) {
 					result.put(work.getCalculator());
 				} else {
 					result.put(work.getChecktor());
