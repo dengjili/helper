@@ -4,6 +4,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import cn.gov.cma.guilin.workhelper.model.Work;
 
 public interface DateHelper {
 	// 根据传入文件名解析月份，根据年月获取当月天数
@@ -15,6 +20,17 @@ public interface DateHelper {
 		calendar.setTime(date);
 		// 获取当月最大天数
 		return calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+	}
+	
+	// 根据传入文件名解析月份，根据年月获取当月天数
+	public static int getDaysFromAllFileName(List<Work> uniqueDatas) throws Exception {
+		Set<String> uniqueName = new HashSet<>();
+		for (Work work : uniqueDatas) {
+			String fileName = work.getFileName();
+			String substring = fileName.substring(0, fileName.length()-3);
+			uniqueName.add(substring);
+		}
+		return uniqueName.size();
 	}
 
 	public static boolean isBetween(String beginTime, String start, String end) throws Exception {

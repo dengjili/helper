@@ -46,8 +46,7 @@ public class Calculation {
 	public Calculation(List<Work> dataAll, List<Work> uniqueDatas) throws Exception {
 		this.dataAll = dataAll;
 		this.uniqueDatas = uniqueDatas;
-		String fileName = dataAll.get(0).getFileName();
-		days = DateHelper.getDays(fileName);
+		days = DateHelper.getDaysFromAllFileName(uniqueDatas);
 	}
 	
 	// 1.统计每月天数是否正常，如果缺少，需要统计缺少次数（一天正常是三条）
